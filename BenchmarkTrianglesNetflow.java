@@ -186,9 +186,7 @@ public class BenchmarkTrianglesNetflow {
         "The length of the query in seconds.");
     Option outputFileOption = new Option("out", "outputFile", true,
         "Where the output should go.");
-    Option outputTriadOption = new Option("triad", "outputTriads", true,
-    "Where the triads should go (optional).");
-
+        
     netwflowInput.setRequired(true);
     queryWindowOption.setRequired(true);
     outputFileOption.setRequired(true);
@@ -196,7 +194,6 @@ public class BenchmarkTrianglesNetflow {
     options.addOption(netwflowInput);
     options.addOption(queryWindowOption);
     options.addOption(outputFileOption);
-    options.addOption(outputTriadOption);
     
     CommandLineParser parser = new DefaultParser();
     HelpFormatter formatter = new HelpFormatter();
@@ -214,7 +211,6 @@ public class BenchmarkTrianglesNetflow {
     double queryWindow = Double.parseDouble(cmd.getOptionValue("queryWindow"));
     String inFile = cmd.getOptionValue("netwflowInput");
     String outputFile = cmd.getOptionValue("outputFile");
-    String outputTriadFile = cmd.getOptionValue("outputTriads");
 
     // get the execution environment
     final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -237,11 +233,6 @@ public class BenchmarkTrianglesNetflow {
         .intervalJoin(netflows.keyBy(new SourceKeySelector()))
         .between(Time.milliseconds(0), Time.milliseconds((long) queryWindow * 1000))
         .process(new EdgeJoiner(queryWindow));
-
-    // If specified, we spit out the triads we found to disk.
-    if (outputTriadFile != null) {
-      triads.writeAsText(outputTriadFile, FileSystem.WriteMode.OVERWRITE);
-    }
 
     // Transforms the stream of triads into triangles.
     //DataStream<Triangle> triangles = triads
