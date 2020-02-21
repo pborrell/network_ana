@@ -24,24 +24,6 @@ public class NetflowSource extends RichParallelSourceFunction<Netflow> {
   public NetflowSource(String filename)
   {
     this.filename = filename;
-  /*  try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-      String line;
-      String delimnator = ",";
-      while ((line = br.readLine()) != null) {
-        String[] liny = line.split(delimnator);
-        Netflow netflow = new Netflow(
-        Long.parseLong(liny[0]),
-        liny[10],
-        liny[11]
-        );
-      }
-        br.close();
-} catch (FileNotFoundException e) {
-          e.printStackTrace();
-      } catch (IOException e) {
-          e.printStackTrace();
-      }
-  */
   }
   @Override
   public void run(SourceContext<Netflow> out) throws Exception
@@ -51,19 +33,22 @@ public class NetflowSource extends RichParallelSourceFunction<Netflow> {
       String delimnator = ",";
       while ((line = br.readLine()) != null) {
         String[] liny = line.split(delimnator);
-        Netflow netflow = new Netflow(
+        try{
+          Netflow netflow = new Netflow(
         Long.parseLong(liny[0]),
         liny[10],
         liny[11]
         );
-      
-       // br.close();
-      
         out.collectWithTimestamp(netflow, unix_secs);
         out.emitWatermark(new Watermark(unix_secs));
-      }
+        }
+        catch (NumberFormatException e) {
+          System.out.println("This is not a number");
+          System.out.println(e.getMessage());
+        }
       }
     }
+  }
       @Override
   public void cancel()
   {
